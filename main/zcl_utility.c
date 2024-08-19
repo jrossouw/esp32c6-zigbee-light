@@ -19,6 +19,18 @@
 
 static const char *TAG = "ZCL_UTILITY";
 
+#define TEMPERATURE_SENSOR_CONFIG()                                         \
+    {                                                                       \
+        .measured_value = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_UNKNOWN,   \
+        .min_value = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_INVALID,    \
+        .max_value = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_INVALID,    \
+    }
+
+static int16_t zb_temperature_to_s16(float temp)
+{
+    return (int16_t)(temp * 100);
+}
+
 esp_err_t esp_zcl_utility_add_ep_basic_manufacturer_info(esp_zb_ep_list_t *ep_list, uint8_t endpoint_id, zcl_basic_manufacturer_info_t *info)
 {
     esp_err_t ret = ESP_OK;
@@ -44,7 +56,7 @@ esp_err_t esp_zcl_utility_add_ep_power_config(esp_zb_ep_list_t *ep_list, uint8_t
 
     // Create power config cluster/attribute list
     esp_zb_attribute_list_t *esp_zb_power_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
-    esp_zb_power_config_cluster_add_attr(esp_zb_power_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, value_p);
+    esp_zb_power_config_cluster_add_attr(esp_zb_power_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, value_p);
     ESP_ERROR_CHECK(esp_zb_cluster_list_add_power_config_cluster(cluster_list, esp_zb_power_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
 
     return ret;
@@ -56,9 +68,14 @@ esp_err_t esp_zcl_utility_add_ep_temp_config(esp_zb_ep_list_t *ep_list, uint8_t 
     esp_zb_cluster_list_t *cluster_list = esp_zb_ep_list_get_ep(ep_list, endpoint_id);
     ESP_RETURN_ON_FALSE(cluster_list, ESP_ERR_INVALID_ARG, TAG, "Failed to find endpoint id: %d in list: %p", endpoint_id, ep_list);
     
+    /* Create customized temperature sensor endpoint */
+    esp_zb_temperature_meas_cluster_cfg_t sensor_cfg = TEMPERATURE_SENSOR_CONFIG();
+    /* Set (Min|Max)MeasuredValure */
+    sensor_cfg.min_value = zb_temperature_to_s16(ESP_TEMP_SENSOR_MIN_VALUE);
+    sensor_cfg.max_value = zb_temperature_to_s16(ESP_TEMP_SENSOR_MAX_VALUE);
+
     // Create temperature measurement cluster
-    esp_zb_attribute_list_t *esp_zb_temp_measurement_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT);
-    esp_zb_temperature_meas_cluster_add_attr(esp_zb_temp_measurement_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, value_p);
+    esp_zb_attribute_list_t *esp_zb_temp_measurement_cluster = esp_zb_temperature_meas_cluster_create((esp_zb_temperature_meas_cluster_cfg_t*)&sensor_cfg);
     ESP_ERROR_CHECK(esp_zb_cluster_list_add_temperature_meas_cluster(cluster_list, esp_zb_temp_measurement_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));  
 
     return ret;

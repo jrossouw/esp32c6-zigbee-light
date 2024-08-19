@@ -29,6 +29,9 @@ extern "C" {
 /*! Maximum length of ModelIdentifier string field */
 #define ESP_ZB_ZCL_CLUSTER_ID_BASIC_MODEL_IDENTIFIER_MAX_LEN 32
 
+#define ESP_TEMP_SENSOR_MIN_VALUE       (-10)   /* Local sensor min measured value (degree Celsius) */
+#define ESP_TEMP_SENSOR_MAX_VALUE       (+90)   /* Local sensor max measured value (degree Celsius) */
+
 /** optional basic manufacturer information */
 typedef struct zcl_basic_manufacturer_info_s {
     char *manufacturer_name;

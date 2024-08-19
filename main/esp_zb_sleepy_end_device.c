@@ -39,7 +39,7 @@
 
 static const char *TAG = "ESP_ZB_SLEEP";
 
-uint8_t batVoltage = 55;
+uint8_t batPercentage = 55;
 int16_t temperature = 125;
 
 button_config_t gpio_btn_cfg = {
@@ -75,8 +75,8 @@ static void button_event_cb(void *arg, void *data)
             ESP_EARLY_LOGI(TAG, "Update battery voltage");
             esp_zb_lock_acquire(portMAX_DELAY);
             esp_zb_zcl_set_attribute_val(HA_ESP_LIGHT_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, 
-                ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, 
-                &batVoltage, false);
+                ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, 
+                &batPercentage, false);
             esp_zb_lock_release();
             ESP_EARLY_LOGI(TAG, "Report battery voltage");
             esp_zb_zcl_report_attr_cmd_t cmd_req;
@@ -86,18 +86,16 @@ static void button_event_cb(void *arg, void *data)
             cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
             cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
             cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-            cmd_req.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID;
+            cmd_req.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
             esp_zb_lock_acquire(portMAX_DELAY);
             esp_zb_zcl_report_attr_cmd_req(&cmd_req);
             esp_zb_lock_release();
 
-            /*
             ESP_EARLY_LOGI(TAG, "Update temperature reading");
             esp_zb_lock_acquire(portMAX_DELAY);
             esp_zb_zcl_set_attribute_val(HA_ESP_LIGHT_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, 
                 ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
-            esp_zb_lock_release();
-            */ 
+            esp_zb_lock_release(); 
 
             ESP_EARLY_LOGI(TAG, "Report temp sensor reading");
             esp_zb_zcl_report_attr_cmd_t cmd_req2;
@@ -315,7 +313,7 @@ static void esp_zb_task(void *pvParameters)
     };
 
     esp_zcl_utility_add_ep_basic_manufacturer_info(esp_zb_on_off_light_ep, HA_ESP_LIGHT_ENDPOINT, &info);
-    esp_zcl_utility_add_ep_power_config(esp_zb_on_off_light_ep, HA_ESP_LIGHT_ENDPOINT, &batVoltage);
+    esp_zcl_utility_add_ep_power_config(esp_zb_on_off_light_ep, HA_ESP_LIGHT_ENDPOINT, &batPercentage);
     esp_zcl_utility_add_ep_temp_config(esp_zb_on_off_light_ep, HA_ESP_LIGHT_ENDPOINT, &temperature);
     esp_zb_device_register(esp_zb_on_off_light_ep);
     esp_zb_core_action_handler_register(zb_action_handler);
